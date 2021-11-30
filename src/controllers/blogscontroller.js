@@ -18,72 +18,77 @@ const createBlogs = async function (req, res) {
 
 const getBlogs = async function (req, res) {
     try {
+        if (req.user.userId == req.query.authorId) {
+            let info = req.query
+            let data = await BlogsModel.findOne(info)
+            if (data) {
+                if (data.isDeleted == false && data.isPublished == true) {
+                    res.status(200).send({ Status: "Success", Info: data })
 
-        let info = req.query
-        let data = await BlogsModel.findOne(info)
-        if (data) {
-            if (data.isDeleted == false && data.isPublished == true) {
-                res.status(200).send({ Status: "Success", Info: data })
-
+                } else {
+                    res.status(500).send({ err: "either book isn't published or data is deleted" })
+                }
             } else {
-                res.status(500).send({ err: "either book isn't published or data is deleted" })
+                res.status(404).send({ err: "please provide valid Query Params in Postman" })
             }
         } else {
-            res.status(404).send({ err: "provide an valid Input details" })
+            res.status(404).send({ err: "you are trying to access a different's user account" })
         }
     }
     catch (err) {
         console.log(err.message)
         res.status(500).send({ msg: "Something went wrong" })
     }
-
-
 }
 
 const update = async function (req, res) {
+    try {
+        let decodedUserToken = req.user
+        let BlogUser = await BlogsModel.findOne({ _id: req.params.blogId })
+        console.log(decodedUserToken.userId)
+        console.log(BlogUser.authorId)
+
+        if (decodedUserToken.userId == BlogUser.authorId) {
+
+            let userbody = await BlogsModel.findOne({ _id: req.params.blogId })
+            if (userbody) {
+                if (userbody.isDeleted === false) {
+
+                    let tempbody = await BlogsModel.findOneAndUpdate({ _id: userbody._id }, { $set: { "title": req.body.title, "body": req.body.body, "category": req.body.category }, $push: { "tags": req.body.tags, "subcategory": req.body.subcategory } }, { new: true })
 
 
-    console.log(req.decodedtoken._id)
-    if (req.decodedtoken._id == req.params.blogId.authorId) {
+                    if (req.body.isPublished === true) {
+                        let newdata = await BlogsModel.findOneAndUpdate({ _id: userbody._id }, { $set: { "isPublished": req.body.isPublished, "publishedAt": Date.now() } }, { new: true })
+                        res.status(200).send({ status: true, data: newdata })
+                    }
 
-        let userbody = await BlogsModel.findOne({ _id: req.params.blogId })
-        if (userbody) {
-            if (userbody.isDeleted === false) {
+                    else {
+                        res.status(200).send({ status: true, data: tempbody })
 
-                let tempbody = await BlogsModel.findOneAndUpdate({ _id: userbody._id }, { $set: { "title": req.body.title, "body": req.body.body, "category": req.body.category }, $push: { "tags": req.body.tags, "subcategory": req.body.subcategory } }, { new: true })
+                    }
 
-
-                if (req.body.isPublished === true) {
-                    let newdata = await BlogsModel.findOneAndUpdate({ _id: userbody._id }, { $set: { "isPublished": req.body.isPublished, "publishedAt": Date.now() } }, { new: true })
-                    res.status(200).send({ status: true, data: newdata })
+                } else {
+                    res.status(404).send({ err: "the data is already deleted " })
                 }
-
-                else {
-                    res.status(200).send({ status: true, data: tempbody })
-
-                }
-
+            } else {
+                res.status(505).send({ status: false, err: " " })
             }
-
-            else {
-                res.status(404).send({ err: "the data is already deleted " })
-            }
+        } else {
+            res.status(403).send({ Message: "you are trying to access a different's user account" })
         }
-
-        else {
-            res.status(505).send({ status: false, err: " " })
-        }
-
-    } else {
-        res.status(404).send({ Message: "Not a token at all" })
+    }
+    catch (err) {
+        res.status(500).send({ status: false, message: err.message })
     }
 }
 
 const DeleteBlogs = async function (req, res) {
-    console.log(req.decodedtoken.userId)
-    console.log(req.params.deleteId)
+    let decodedUserToken = req.user
+    let BlogUser = await BlogsModel.findOne({ _id: req.params.deleteId })
+    // console.log(decodedUserToken.userId)
+    // console.log(BlogUser.authorId)
     //userid is equals to author id. for reference see the token genereation api.
-    if (req.decodedtoken.userId == req.params.deleteId.authorId) {
+    if (decodedUserToken.userId == BlogUser.authorId) {
 
         let blogId = req.params.deleteId
         let checking = await BlogsModel.findOneAndUpdate({ _id: blogId, isDeleted: false }, { isDeleted: true, deletedAt: Date() })
@@ -94,25 +99,30 @@ const DeleteBlogs = async function (req, res) {
             res.status(404).send({ status: false, msg: "Invalid BlogId" })
         }
     } else {
-        res.status(404).send({ err: "Not a valid token at all" })
+        res.status(404).send({ err: "you are trying to access a different's user account" })
     }
 }
 
 const DeleteBlogsbyQuery = async function (req, res) {
-    console.log(req.query.authorId)
-    console.log(req.decodedtoken.userId)
-    if (req.decodedtoken.userId == req.query.authorId) {
-        let info = req.query
-        let userbody = await BlogsModel.findOne(info)
-        let tempdata = await BlogsModel.findOneAndUpdate({ id: userbody._id, isDeleted: false }, { isDeleted: true, deletedAt: Date() })
-        if (tempdata) {
+    try {
+        console.log(req.query.authorId)
+        console.log(req.user.userId)
+        if (req.user.userId == req.query.authorId) {
+            let info = req.query
+            let userbody = await BlogsModel.findOne(info)
+            let tempdata = await BlogsModel.findOneAndUpdate({ id: userbody._id, isDeleted: false }, { isDeleted: true, deletedAt: Date() })
+            if (tempdata) {
 
-            res.status(200).send({ Msg: "Done", data: {} })
+                res.status(200).send({ Msg: "Done", data: {} })
+            } else {
+                res.status(404).send({ err: "data might have been already deleted" })
+            }
         } else {
-            res.status(404).send({ err: "data might have been already deleted" })
+            res.status(404).send({ err: "you are trying to access a different's user account" })
         }
-    } else {
-        res.status(404).send({ err: "Not a valid token at all" })
+    }
+    catch (err) {
+        res.status(500).send({ status: false, message: err.message })
     }
 }
 
