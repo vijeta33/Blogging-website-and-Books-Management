@@ -15,46 +15,89 @@ const createBlogs = async function (req, res) {
     }
 }
 
-const getBlogs= async function(req, res){
-    try{
-        let Id = req.query.authorId
-        let category= req.query.category
-        let tags= req.query.tags
-        let subcategory= req.query.subcategory
-        let data = await BlogsModel.findOne({authorId: Id, category: category, tags: tags, subcategory: subcategory })
-        console.log("Data", data)
-        if (data){
-            if (data.isDeleted == false && data.isPublished == true){
-                res.status(200).send({Status: "Success", Info: data })
+const getBlogs = async function (req, res) {
+    try {
+
+        let info = req.query
+        let data = await BlogsModel.findOne(info)
+        if (data) {
+            if (data.isDeleted == false && data.isPublished == true) {
+                res.status(200).send({ Status: "Success", Info: data })
+
+            } else {
+                res.status(500).send({ err: "either book isn't published or data is deleted" })
             }
-            else{
-                res.status(500).send({err: "either book isn't published or data is deleted"})
-            }
-        }
-        else{
-            res.status(404).send({err: "provide an valid Input details"})
+        } else {
+            res.status(404).send({ err: "provide an valid Input details" })
         }
     }
-    catch(err) {
+    catch (err) {
         console.log(err.message)
-        res.status(500).send( { msg: "Something went wrong" } )
+        res.status(500).send({ msg: "Something went wrong" })
     }
+
+
 }
 
+const update = async function (req, res) {
+
+    let userbody = await BlogsModel.findOne({_id: req.params.blogId})
+    if (userbody){
+        if (userbody.isDeleted === false){
+        
+            let tempbody = await BlogsModel.findOneAndUpdate({_id : userbody._id} , {$set:{"title" : req.body.title, "body": req.body.body,  "category": req.body.category},  $push:{"tags": req.body.tags, "subcategory": req.body.subcategory }}, {new : true})
+            
+            
+            if (req.body.isPublished === true){
+                let newdata = await BlogsModel.findOneAndUpdate({_id : userbody._id} , {$set:{"isPublished" : req.body.isPublished, "publishedAt": Date.now()}}, {new : true})
+                res.status(200).send({status : true, data: newdata})
+            }
+
+            else{
+                res.status(200).send({status : true, data: tempbody})
+
+            }
+            
+        }
+
+        else{
+            res.status(404).send({err: "the data is already deleted "})
+        }
+    }
+
+    else{
+        res.status(505).send({status: false , err: " "})
+    }
+
+
+}
 
 const DeleteBlogs = async function (req, res) {
 
     let blogId = req.params.deleteId
-
-    let checking = await BlogsModel.findOneAndUpdate({ _id: blogId, isDeleted: false}, {isDeleted : true, deletedAt:Date()})
-
+    let checking = await BlogsModel.findOneAndUpdate({ _id: blogId, isDeleted: false }, { isDeleted: true, deletedAt: Date() })
     if (checking) {
         res.status(200).send({ msg: "Update done" })
-        
+
     } else {
         res.status(404).send({ status: false, msg: "Invalid BlogId" })
     }
 }
+
+const DeleteBlogsbyParam = async function (req, res) {
+    let info = req.query
+    let userbody = await BlogsModel.findOne(info)
+    let tempdata=await BlogsModel.findOneAndUpdate({id:userbody._id, isDeleted:false},{isDeleted: true, deletedAt: Date() })
+    if (tempdata){
+    
+        res.status(200).send({err: "Done", data: {}})
+        }else{
+            res.status(404).send({err: "data might have been already deleted"})
+        }
+}
+
 module.exports.createBlogs = createBlogs
 module.exports.DeleteBlogs = DeleteBlogs
-module.exports.getBlogs=getBlogs
+module.exports.getBlogs = getBlogs
+module.exports.update = update
+module.exports.DeleteBlogsbyParam = DeleteBlogsbyParam
