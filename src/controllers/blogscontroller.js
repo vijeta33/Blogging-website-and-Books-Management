@@ -109,13 +109,15 @@ const DeleteBlogs = async function (req, res) {
 
 const DeleteBlogsbyQuery = async function (req, res) {
     try {
-        // console.log(req.query.authorId)
-        // console.log(req.user.userId)
-        if (req.user.userId == req.query.authorId) {
-            let info = req.query
-            let userbody = await BlogsModel.findOne(info)
-            let tempdata = await BlogsModel.findOneAndUpdate({ id: userbody._id, isDeleted: false }, { isDeleted: true, deletedAt: Date() })
-            if (tempdata) {
+   
+        let decodedUserToken = req.user
+        info=req.query
+        let BlogUser = await BlogsModel.findOne({info})
+        console.log(decodedUserToken.userId)
+        console.log(BlogUser.authorId)
+        if (decodedUserToken.userId == BlogUser.authorId) {
+            let tempdata = await BlogsModel.findOneAndUpdate({ id: BlogUser._id, isDeleted: false }, { isDeleted: true, deletedAt: Date() })
+            if (BlogUser) {
 
                 res.status(200).send()
             } else {

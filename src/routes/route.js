@@ -19,3 +19,4 @@ router.delete('/DeleteBlogsbyQuery',Middleware.Auth,BlogsController.DeleteBlogsb
 router.post('/login',AuthorController.login)
 
 module.exports = router;
+//
