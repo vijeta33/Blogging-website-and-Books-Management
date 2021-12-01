@@ -3,37 +3,42 @@ const AuthorModel = require("../models/Author_Model")
 const mongoose = require("mongoose")
 
 const createBlogs = async function (req, res) {
+    try {
 
-    let data = req.body
+        let data = req.body
+        let Author = await AuthorModel.findById(data.authorId)
+        if (!Author) {
+            res.status(400).send({ status: false, message: "Author_Id not found" })
+        } else {
+            let savedblog = await BlogsModel.create(data)
+            res.status(201).send({ status: true, data: savedblog })
+        }
 
-    let Author = await AuthorModel.findById(data.authorId)
-    if (!Author) {
-        res.status(400).send({ status: false, message: "Author_Id not found" })
-    } else {
-        let savedblog = await BlogsModel.create(data)
-        res.status(201).send({ status: true, data: savedblog })
+    }
+    catch (err) {
+        console.log(err.message)
+        res.status(500).send({ msg: "Something went wrong" })
     }
 }
 
 
 const getBlogs = async function (req, res) {
     try {
-        if (req.user.userId == req.query.authorId) {
-            let info = req.query
-            let data = await BlogsModel.findOne(info)
-            if (data) {
-                if (data.isDeleted == false && data.isPublished == true) {
-                    res.status(200).send({ Status: "Success", Info: data })
 
-                } else {
-                    res.status(500).send({ err: "either book isn't published or data is deleted" })
-                }
+        let info = req.query
+        let data = await BlogsModel.findOne(info)
+        if (data) {
+            if (data.isDeleted == false && data.isPublished == true) {
+                res.status(200).send({ Status: "Success", Info: data })
+
+
             } else {
-                res.status(404).send({ err: "please provide valid Query Params in Postman" })
+                res.status(500).send({ err: "either book isn't published or data is deleted" })
             }
         } else {
-            res.status(404).send({ err: "you are trying to access a different's user account" })
+            res.status(404).send({ err: "please provide valid Query Params in Postman" })
         }
+
     }
     catch (err) {
         console.log(err.message)

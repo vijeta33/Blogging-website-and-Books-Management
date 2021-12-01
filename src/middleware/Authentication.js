@@ -7,7 +7,7 @@ const Auth = async function (req, res, next) {
         if (!token) {
             res.status(401).send({ status: false, Message: 'Mandatory authentication token is missing.' })
         } else {
-            let decodedtoken = jwt.verify(token, 'Group4')
+            let decodedtoken = jwt.verify(token, "Group4")
             if (decodedtoken) {
                 req.user = decodedtoken
                 // console.log(decodedtoken)
