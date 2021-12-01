@@ -12,8 +12,6 @@ const Auth = async function (req, res, next) {
                 req.user = decodedtoken
                 // console.log(decodedtoken)
                 next()
-            } else {
-                res.status(401).send({ Message: "Authentication Token is missing" })
             }
         }
     }
