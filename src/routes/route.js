@@ -11,8 +11,8 @@ router.get('/test-me', function (req, res) {
 });
 
 router.post('/createAuthor',AuthorController.createAuthor)
-router.post('/createBlogs',BlogsController.createBlogs)
-router.get('/getBlogs',BlogsController.getBlogs)
+router.post('/createBlogs',Middleware.Auth,BlogsController.createBlogs)
+router.get('/getBlogs',Middleware.Auth,BlogsController.getBlogs)
 router.put('/update/:blogId',Middleware.Auth,BlogsController.update)
 router.delete('/DeleteBlogs/:deleteId',Middleware.Auth,BlogsController.DeleteBlogs)
 router.delete('/DeleteBlogsbyQuery',Middleware.Auth,BlogsController.DeleteBlogsbyQuery)
