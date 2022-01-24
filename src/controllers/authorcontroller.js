@@ -1,5 +1,4 @@
 const AuthorModel = require("../models/Author_Model")
-const mongoose = require("mongoose")
 const jwt = require("jsonwebtoken")
 
 const createAuthor = async function (req, res) {
@@ -23,10 +22,8 @@ const login = async function (req, res) {
             if (User) {
                 const Token = jwt.sign({ userId: User._id }, "Group4")
                 res.header('x-api-key', Token)
-                console.log(Token)
-             //Baba Ramdev->eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2MWE0YjVkNTIxNjUyOWJmNjQxMzJhNDQiLCJpYXQiOjE2MzgyNzA1NDl9.0lF59jcVftwL40SzejIeWKYCIm-1Phf89E4w1Kr3FA4
 
-                res.status(200).send({ status: true })
+                res.status(200).send({ status: true , token:Token })
             } else {
                 res.status(400).send({ status: false, Msg: "Invalid Credentials" })
             }

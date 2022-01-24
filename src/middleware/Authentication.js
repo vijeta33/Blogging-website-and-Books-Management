@@ -10,7 +10,6 @@ const Auth = async function (req, res, next) {
             let decodedtoken = jwt.verify(token, "Group4")
             if (decodedtoken) {
                 req.user = decodedtoken
-                // console.log(decodedtoken)
                 next()
             }
         }

@@ -6,9 +6,6 @@ const AuthorController=require("../controllers/authorcontroller")
 const BlogsController=require("../controllers/blogscontroller")
 const Middleware=require("../middleware/Authentication")
 
-router.get('/test-me', function (req, res) {
-    res.send('My first ever api!')
-});
 
 router.post('/createAuthor',AuthorController.createAuthor)
 router.post('/createBlogs',Middleware.Auth,BlogsController.createBlogs)
@@ -19,4 +16,3 @@ router.delete('/DeleteBlogsbyQuery',Middleware.Auth,BlogsController.DeleteBlogsb
 router.post('/login',AuthorController.login)
 
 module.exports = router;
-//
